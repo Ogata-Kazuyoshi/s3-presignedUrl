@@ -5,12 +5,10 @@ import com.amazonaws.services.s3.AmazonS3
 import com.presignedurl.backend.config.S3Config
 import com.presignedurl.backend.model.FileNameContentType
 import io.mockk.*
-import org.hamcrest.MatcherAssert
-import org.hamcrest.Matchers
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.net.URL
 import java.util.*
-import org.junit.jupiter.api.Assertions.assertEquals
 
 class ImageServiceTests {
     private val mockedS3 = mockk<AmazonS3>()
