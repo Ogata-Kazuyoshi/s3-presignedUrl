@@ -1,27 +1,17 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, {useContext} from 'react';
+import {ApplicationContext} from "../contexts/ApplicationProvider.tsx";
+import {fileUploadService} from "../service/FileUploadService.ts";
 
 export const FileUpload: React.FC = () => {
-    const [files, setFiles] = useState<File[]>([]);
+    // const [files, setFiles] = useState<File[]>([]);
 
+    const {files, setFiles} = useContext(ApplicationContext)!
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const filesData = event.target.files;
         if (filesData && filesData.length > 0) {
             setFiles(Array.from(filesData));
         }
     };
-
-    const createReqestBody = () => {
-        const typeAndName = files.map(elm => {
-            return ({
-                contentType: elm.type,
-                fileName: elm.name
-            })
-        })
-        return ({
-            files : typeAndName
-        })
-    }
 
     const uploadFileToS3 = async () => {
         if (!files) {
@@ -30,17 +20,11 @@ export const FileUpload: React.FC = () => {
         }
 
         try {
-            const reqBody = createReqestBody()
-
-            const results: responsePresignedUrl[] = await axios.post('/api/images/presignedUrls', reqBody).then(elm => elm.data);
+            const results = await fileUploadService.getPresignedUrl(files)
 
             for (const result of results) {
                 const index = results.indexOf(result);
-                await axios.put(result.url,files[index],{
-                    headers: {
-                        'Content-Type': files[index].type
-                    }
-                })
+                await fileUploadService.uploadToS3(result.url,files[index])
             }
             alert('ファイルのアップロードに成功しました。');
         } catch (error) {
@@ -50,14 +34,11 @@ export const FileUpload: React.FC = () => {
     };
 
     return (
-        <div>
+        <div data-testid="FileUploadPage">
             <input type="file" multiple={true} onChange={handleFileChange} />
             <button onClick={uploadFileToS3}>アップロード</button>
         </div>
     );
 };
 
-type responsePresignedUrl = {
-    fileName:string,
-    url:string
-}
+
